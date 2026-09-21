@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "zlp-prd-jpn": {
+      "type": "http",
+      "url": "https://engineering-api-mcp.zlp-prd-jpn.zainar.net/mcp",
+      "headers": {
+        "Authorization": "Bearer ${ZLP_PRD_JPN_API_KEY}"
+      }
+    }
+  }
+}

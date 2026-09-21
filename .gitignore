@@ -1,0 +1,11 @@
+# Per-run state written by the koto checks into whatever directory they run in.
+# Never commit these — they are per-person, and a shared one silently corrupts
+# every "Change" line by mixing two people's run histories.
+.koto-*-state.json
+
+# Reports written by `weekly` mode runs
+koto-readers-*.md
+koto-infra-*.md
+koto-crane-*.md
+
+.DS_Store

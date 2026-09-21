@@ -1,0 +1,15 @@
+{
+  "name": "zainar-tools",
+  "owner": {
+    "name": "Misha Orduna",
+    "email": "misha.orduna@zainartech.com"
+  },
+  "plugins": [
+    {
+      "name": "kajima-crane-site-survey",
+      "source": "./plugins/kajima-crane-site-survey",
+      "description": "Read-only health and usage checks for the Kajima Koto Pumping Station crane site (zlp-prd-jpn + Mixpanel): reader health, hub health, tag health, tag usage and crane load-button usage, with the definitions behind each grade.",
+      "version": "0.4.1"
+    }
+  ]
+}
