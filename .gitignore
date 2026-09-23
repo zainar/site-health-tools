@@ -3,9 +3,12 @@
 # every "Change" line by mixing two people's run histories.
 .koto-*-state.json
 
-# Reports written by `weekly` mode runs
-koto-readers-*.md
-koto-infra-*.md
-koto-crane-*.md
+# Reports written by `weekly` mode runs. Anchored to the repo root AND requiring
+# a date, because an unanchored `koto-crane-*.md` also matches the command file
+# commands/koto-crane-usage.md — which is exactly how it went missing once.
+/koto-readers-20*.md
+/koto-hub-20*.md
+/koto-crane-20*.md
+/koto-infra-20*.md
 
 .DS_Store
