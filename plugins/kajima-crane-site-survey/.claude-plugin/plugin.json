@@ -1,0 +1,18 @@
+{
+  "name": "kajima-crane-site-survey",
+  "version": "0.5.0",
+  "description": "Kajima crane site survey \u2014 read-only checks for the Koto Pumping Station crane site (zlp-prd-jpn + Mixpanel): reader health, hub health, tag health, tag usage and crane load-button usage, with the definitions behind each grade. Nothing is scheduled; cadence and delivery are the Agent Scheduler's to set.",
+  "author": {
+    "name": "Misha Orduna",
+    "email": "misha.orduna@zainartech.com"
+  },
+  "keywords": [
+    "zainar",
+    "zlp",
+    "kajima",
+    "koto",
+    "site-monitoring",
+    "read-only",
+    "mixpanel"
+  ]
+}
