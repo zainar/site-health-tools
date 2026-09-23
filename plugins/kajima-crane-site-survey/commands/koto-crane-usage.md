@@ -1,7 +1,7 @@
 ---
 description: Koto Crane LOADED/UNLOADED button usage (Mixpanel prod + ZLP movement cross-check). Read-only. Answers "were the crane load buttons pressed, by whom, when, how often, for how long — and was the crane actually moving".
 argument-hint: "[last_24h | last_7d | last_30d | YYYY-MM-DD:YYYY-MM-DD] [all | crane1 | crane5]  (default: last_7d all)"
-allowed-tools: mcp__Mixpanel__Get-Projects, mcp__Mixpanel__Get-Events, mcp__Mixpanel__Get-Property-Values, mcp__Mixpanel__Run-Query, mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__list_assets, mcp__zlp-prd-jpn__get_tag_by_asset, mcp__zlp-prd-jpn__get_asset_history, Read, Write, Bash
+allowed-tools: mcp__Mixpanel__Get-Projects, mcp__Mixpanel__Get-Events, mcp__Mixpanel__Get-Property-Values, mcp__Mixpanel__Run-Query, mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__who_am_i, mcp__zlp-prd-jpn__list_assets, mcp__zlp-prd-jpn__get_tag_by_asset, mcp__zlp-prd-jpn__get_asset_history, Read, Write, Bash(date:*), Bash(TZ=*)
 ---
 
 # Koto Crane — load-button usage — `$ARGUMENTS`
@@ -82,10 +82,24 @@ Check: claude mcp list → confirm both server names match the mcp__..__ prefixe
    with the window widened by ±2 days. If the wide query is also empty, report zero; if the two
    disagree, report ⚫ UNKNOWN and say the query was unstable.
 
+**Scope check, before anything else runs.** Call `who_am_i`. **If it returns write or admin scope, print this and STOP:**
+
+```
+⚫ KOTO — REFUSING TO RUN ON A WRITE-SCOPED KEY
+The key resolved to <scope>, not viewer / engineering:read.
+Condition is UNKNOWN — nothing was checked.
+Fix: issue a viewer-scoped key and set ZLP_PRD_JPN_API_KEY to it.
+```
+
+This halts rather than warning. The command can run shell commands (`date`, for the clocks), so a
+write+admin production credential means the key's scope — not the `allowed-tools` allowlist — is what
+stands between this monitor and live hardware. An unscoped key is a reason not to run.
+
 4. Print both clocks. **Mixpanel timestamps are UTC.**
 
 ```bash
-date -u '+UTC %Y-%m-%d %H:%M'; TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'
+date -u '+UTC %Y-%m-%d %H:%M'
+TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'
 ```
 
 5. Parse `$ARGUMENTS`. Default `last_7d all`. Explicit ranges `YYYY-MM-DD:YYYY-MM-DD`, in **JST**,

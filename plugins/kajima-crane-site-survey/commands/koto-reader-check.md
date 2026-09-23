@@ -1,7 +1,7 @@
 ---
 description: Koto Crane reader health check (zlp-prd-jpn). Read-only. Grades the 29 commissioned readers against the five-criterion definition, and runs the site sweep the other checks read for context.
 argument-hint: "[check | deep | weekly | triage]  (default: check)"
-allowed-tools: mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__who_am_i, mcp__zlp-prd-jpn__get_site_last_locate, mcp__zlp-prd-jpn__get_site_health, mcp__zlp-prd-jpn__get_site_last_metrics, mcp__zlp-prd-jpn__get_site_summary, mcp__zlp-prd-jpn__list_readers, mcp__zlp-prd-jpn__list_stale_anchors, mcp__zlp-prd-jpn__generate_anchor_list_csv, mcp__zlp-prd-jpn__get_anchor_status, mcp__zlp-prd-jpn__get_anchor_metric_history, mcp__zlp-prd-jpn__get_anchor_ranging_history, mcp__zlp-prd-jpn__check_anchor_calibration, mcp__zlp-prd-jpn__check_anchor_lps_address, mcp__zlp-prd-jpn__list_site_wifi_nodes, mcp__zlp-prd-jpn__run_site_coherency_audit, mcp__zlp-prd-jpn__check_wificloud_health, mcp__zlp-prd-jpn__check_pipeline_coherency, mcp__zlp-prd-jpn__check_inventory_coherency, mcp__zlp-prd-jpn__explain_zlp_issue, mcp__zlp-prd-jpn__get_site_firmware_inventory, mcp__zlp-prd-jpn__list_assets_with_tags, Read, Write, Bash
+allowed-tools: mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__who_am_i, mcp__zlp-prd-jpn__get_site_last_locate, mcp__zlp-prd-jpn__get_site_health, mcp__zlp-prd-jpn__get_site_last_metrics, mcp__zlp-prd-jpn__get_site_summary, mcp__zlp-prd-jpn__list_readers, mcp__zlp-prd-jpn__list_stale_anchors, mcp__zlp-prd-jpn__generate_anchor_list_csv, mcp__zlp-prd-jpn__get_anchor_status, mcp__zlp-prd-jpn__get_anchor_metric_history, mcp__zlp-prd-jpn__get_anchor_ranging_history, mcp__zlp-prd-jpn__check_anchor_calibration, mcp__zlp-prd-jpn__check_anchor_lps_address, mcp__zlp-prd-jpn__list_site_wifi_nodes, mcp__zlp-prd-jpn__run_site_coherency_audit, mcp__zlp-prd-jpn__check_wificloud_health, mcp__zlp-prd-jpn__check_pipeline_coherency, mcp__zlp-prd-jpn__check_inventory_coherency, mcp__zlp-prd-jpn__explain_zlp_issue, mcp__zlp-prd-jpn__get_site_firmware_inventory, mcp__zlp-prd-jpn__list_assets_with_tags, Read, Write, Bash(date:*), Bash(TZ=*)
 ---
 
 # Koto Crane — reader health check — `$ARGUMENTS`
@@ -41,7 +41,7 @@ claude mcp list
 
 If you already have that server registered under a different name, rename it rather than editing prefixes across five files.
 
-**Set `ZLP_PRD_JPN_API_KEY` to a key scoped `viewer` / `engineering:read`.** The credential this MCP normally carries has **write + admin on production**. `confirm: false` dry-run defaults protect against a mistaken call, not against a wrongly-scoped key. The preflight checks this and refuses to continue on a write-scoped key.
+**Set `ZLP_PRD_JPN_API_KEY` to a key scoped `viewer` / `engineering:read`.** The credential this MCP normally carries has **write + admin on production**. `confirm: false` dry-run defaults protect against a mistaken call, not against a wrongly-scoped key, and `allowed-tools` constrains which MCP tools Claude may call but not what a shell can reach. **The preflight halts on a write-scoped key** — the scope is the real guardrail.
 
 ---
 
@@ -61,12 +61,27 @@ Check: claude mcp list  → confirm the server name matches the mcp__..__ prefix
 
 Increment `unknown_runs` in state before stopping. **If `unknown_runs` was already ≥ 1, say prominently that monitoring has now failed on two consecutive runs** — that is its own finding and it means nobody has had eyes on this site since the last successful run.
 
-3. Call `who_am_i`. **If it returns write or admin scope, print a warning at the top of the report and continue read-only.** Do not stop — a wrongly-scoped key is a governance finding, not a monitoring failure — but it must not go unremarked.
+3. **Call `who_am_i`. If it returns write or admin scope, print this and STOP:**
+
+```
+⚫ KOTO — REFUSING TO RUN ON A WRITE-SCOPED KEY
+The key resolved to <scope>, not viewer / engineering:read.
+Site condition is UNKNOWN — nothing was checked.
+Fix: issue a viewer-scoped key and set ZLP_PRD_JPN_API_KEY to it.
+```
+
+**This halts rather than warning, and the reason is worth knowing.** These commands can run shell
+commands (`date`, for the clocks). A shell plus a write+admin production credential means the
+`allowed-tools` allowlist is no longer the thing standing between this monitor and a reboot of live
+hardware — the key's scope is. An unscoped key is therefore not a governance note to carry in the
+report; it is a reason not to run at all on a site where crews work under crane loads.
 
 4. Get the current time in **both** zones and print them. JST = UTC+9; the site runs on JST and most tooling around it reports PT.
 
 ```bash
-date -u '+UTC %Y-%m-%d %H:%M'; TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'; TZ=America/Los_Angeles date '+PT  %Y-%m-%d %H:%M'
+date -u '+UTC %Y-%m-%d %H:%M'
+TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'
+TZ=America/Los_Angeles date '+PT  %Y-%m-%d %H:%M'
 ```
 
 5. Read `.koto-reader-state.json` from the working directory. If absent, seed it from **§Seed state** at the end of this file. Write it back at the end of the run, **never before** — a run that dies mid-way must not leave a state file claiming it succeeded.
@@ -174,9 +189,15 @@ Skip on `check` when §5 came back clean, except for readers in the stale set. R
 
 `list_readers` with `site_res_name` and `page_size=100`. Apply the ghost rule from §2.
 
-**Reachability gate: last heartbeat within 12 h.** Beyond that the reader **drops off the monitored roster and onto the inventory review list** — it is not graded unhealthy, it is graded *not currently a monitored reader*, and that count is reported separately.
+**Reachability gate: last heartbeat within 12 h.** Beyond that the reader is graded **⚫ UNKNOWN — not observed this window**, reported as its own count.
 
-Ghost count and gated-out count are **hygiene numbers, reported every run, never folded into the health score.**
+> **It stays in the denominator of 29. This is the correction to an earlier version of this file, and the reason matters.**
+>
+> An earlier draft dropped gated-out readers off the monitored roster entirely. That reintroduces exactly the feedback loop §2 rejects for the 100-day-silence rule: **readers that go dark leave the denominator, so the health percentage recovers as the site degrades.** Twenty-nine readers with ten dark would have read "19/19 reporting, 100%" instead of "19/29, ten unobserved."
+>
+> The ghost filter is safe because it is positional — a property of the record, not of the signal being graded. A heartbeat gate is temporal and is the signal being graded, so it must never change the denominator. **Grade them UNKNOWN, count them, keep them in the 29.**
+
+**The ghost count is a hygiene number** — 19 uncommissioned records, reported every run, outside the health score. **The gated-out count is not**: it is unobserved monitored readers, and it belongs in the grade.
 
 ### 6.1 Alive — powered, and the sensor works
 
@@ -361,7 +382,7 @@ KOTO CRANE READERS — <emoji + level> — <YYYY-MM-DD HH:MM JST / HH:MM PT> —
 One line: what is true right now.
 
 Readers     <n>/29 live reporting        (silent: <names>)
-Gated out   <n> past the 12h reachability gate — inventory review, not graded
+Unobserved  <n>/29 past the 12h reachability gate — graded ⚫ UNKNOWN, still in the denominator
 Ghosts      19 uncommissioned records (excluded — hygiene only)
 Last fix    <age>
 Pipeline    metrics <lag> / location <lag>
@@ -369,7 +390,7 @@ Coherency   <root-cause code verbatim>  <(standing baseline, unchanged) | (NEW �
 Change      <vs last run: +/- readers, who recovered, who newly went silent | unavailable — no prior state>
 
 === FIVE CRITERIA ===
-0 Present       <n>/29 on roster and inside the 12h gate
+0 Present       <n>/29 on roster and inside the 12h gate   (<n> unobserved — UNKNOWN, not healthy)
 1 Alive         continuity <n> ok / <n> gap>10m / <n> gap>30m   validity <n> stuck/zeroed/out-of-range
 1c Thermal      peak <°C> at <hh:mm JST>   day-over-day <+/- °C>   spread <°C>   trend: <flat|rising>
 2 Contributing  <n> synced   <n> below 50% baseline   <n> below the 100-event floor   baseline: <available|unavailable>
@@ -422,7 +443,7 @@ Values from the 2026-08-25 registry export and the 2026-09-08 tag check context.
   "grade": null,
   "live_readers_reporting": null,
   "silent_readers": [],
-  "gated_out_readers": [],
+  "unobserved_readers": [],
   "coherency_code": "inventory_mismatch",
   "coherency_is_baseline_only": true,
   "csv_columns_checked": false,

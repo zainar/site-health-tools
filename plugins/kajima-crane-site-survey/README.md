@@ -75,11 +75,21 @@ Tools are prefixed `mcp__zlp-prd-jpn__` and `mcp__Mixpanel__`. Registered under 
 `allowed-tools` frontmatter **silently fails to match** and the command looks broken for no visible
 reason. Rename the server rather than editing prefixes across five files.
 
-## Read-only, and it is enforced
+## Read-only — what actually enforces it
 
-Each command declares an explicit `allowed-tools` whitelist containing only read-scoped tools. That
-whitelist is the mechanism keeping write tools out of a monitor pointed at live hardware where crews
-work under crane loads — **this is why these ship as commands rather than skills.**
+Each command declares an explicit `allowed-tools` whitelist containing only read-scoped MCP tools,
+and that is why these ship as commands rather than skills. **But the allowlist is not the whole
+guardrail, and an earlier version of this README overstated it.**
+
+An `allowed-tools` list constrains which *MCP tools* Claude may call. It does not constrain a shell.
+These commands need `date` to print the JST/PT clocks, so `Bash` is whitelisted — **scoped to
+`Bash(date:*)` and `Bash(TZ=*)`**, precisely so it cannot be used to reach the engineering API
+directly with an HTTP method the allowlist would have refused. Unscoped `Bash` would have made the
+read-only claim decorative.
+
+**The other half is the key's scope**, which is why every command now calls `who_am_i` in preflight
+and **halts** on a write or admin key rather than warning. A shell plus an admin production
+credential is not a governance note to carry in the report; it is a reason not to run.
 
 Three tools look like diagnostics and are writes: `locate_anchor` / `start_reader_survey` perturb the
 positioning system, `ping_tag` transmits to the tag, and `reboot_tag_host` reads like a tag tool but
@@ -183,4 +193,4 @@ the event now behaves differently than proposed).
 
 ---
 
-Source: the *Kajima site survey* project. Site facts current to 2026-09-16. Version 0.4.1.
+Source: the *Kajima site survey* project. Site facts current to 2026-09-16. Version 0.5.0.

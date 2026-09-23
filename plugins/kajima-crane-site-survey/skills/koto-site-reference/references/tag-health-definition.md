@@ -63,7 +63,13 @@ There is also a trap inside the switch itself: through 08-20 → 08-25, `#1_21ee
 
 ### Problem 4 — "during a work shift" is not the same as site working hours
 
-Site hours at Crane are **08:00–18:00 JST Mon–Sat** (the window both sibling definitions use). A worker's shift is not that window: across the ten Subcon C workers, last-report times landed on six different days and at markedly different hours, and presence status flipped Offsite within ~2 min of each tag's last report for 9 of 10. **The presence logic is sound, and shifts genuinely end at different times.**
+Site hours at Crane are **08:00–18:00 JST Mon–Fri** (the window every check in this plugin uses; this document originally said Mon–Sat).
+
+> **Window corrected 2026-09-16: 08:00–18:00 JST, Mon–Fri.** This document was written against
+> Mon–Sat. The commands in this plugin grade Mon–Fri, so where the text below says Mon–Sat, read
+> Mon–Fri — weekends are reported as an out-of-hours line rather than graded. See the plugin README
+> for why Saturday is deferred and what closes it.
+ A worker's shift is not that window: across the ten Subcon C workers, last-report times landed on six different days and at markedly different hours, and presence status flipped Offsite within ~2 min of each tag's last report for 9 of 10. **The presence logic is sound, and shifts genuinely end at different times.**
 
 Grading a tag against 08:00–18:00 fails every early finisher. Grading it only against its own observed presence window creates the failure the reader definition already rejected once: **the exclusion criterion becomes the signal being graded.** A tag that is dead never shows presence, is therefore never evaluated, drops out of the denominator, and the site returns to green with a dead fleet. That is precisely how the 100-day-silence exclusion was rejected in `reader-health-definition.md` §0.
 

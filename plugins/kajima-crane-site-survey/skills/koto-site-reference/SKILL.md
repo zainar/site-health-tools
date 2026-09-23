@@ -64,7 +64,9 @@ instead and say why.
 
 Never call a write tool against this site, whatever the finding and however obvious the fix. The
 production credential carries **write + admin**; `confirm: false` guards against a mistaken call,
-not a wrongly-scoped key. Propose remediation and let a human who knows what is on site that hour
+not a wrongly-scoped key. **The `allowed-tools` allowlist constrains MCP tools, not a shell** — which
+is why `Bash` is scoped to the clock commands and why every command halts in preflight on a write or
+admin key rather than warning. Propose remediation and let a human who knows what is on site that hour
 execute it — a crane may be under load.
 
 - **`locate_anchor` / `locate_and_fetch` / `start_reader_survey`** are `engineering:write` and

@@ -35,7 +35,13 @@ A hub is **healthy** when all five hold.
 | Window | Question | Use |
 |---|---|---|
 | **Newest-sample age** — 10 min warn / 30 min error | is the hub up *now* | **grading and alerting** |
-| **Rolling 24 h**, weighted to JST working hours (08:00–18:00 Mon–Sat) | uptime fraction, longest gap, flap count, trend | the report body |
+| **Rolling 24 h**, weighted to JST working hours (08:00–18:00 Mon–Fri) | uptime fraction, longest gap, flap count, trend | the report body |
+
+> **Window corrected 2026-09-16: 08:00–18:00 JST, Mon–Fri.** This document was written against
+> Mon–Sat. The commands in this plugin grade Mon–Fri, so where the text below says Mon–Sat, read
+> Mon–Fri — weekends are reported as an out-of-hours line rather than graded. See the plugin README
+> for why Saturday is deferred and what closes it.
+
 
 ---
 

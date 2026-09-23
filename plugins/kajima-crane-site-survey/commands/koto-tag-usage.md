@@ -1,7 +1,7 @@
 ---
 description: Koto Crane tag USAGE report (zlp-prd-jpn). Read-only. Answers "were these tags actually used, by whom, when, and how much" over any date range — for the 12 monitored tags (Subcon C01–C10, Crane #1, Crane #5).
 argument-hint: "[last_24h | last_7d | last_30d | YYYY-MM-DD:YYYY-MM-DD] [all | subcon-c | cranes]  (default: last_7d all)"
-allowed-tools: mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__list_assets, mcp__zlp-prd-jpn__get_tag_by_asset, mcp__zlp-prd-jpn__list_assets_with_tags, mcp__zlp-prd-jpn__list_offline_tags, mcp__zlp-prd-jpn__list_continuous_mode_tags, mcp__zlp-prd-jpn__get_asset_history, mcp__zlp-prd-jpn__get_tag_location_history, mcp__zlp-prd-jpn__get_tag_status, mcp__zlp-prd-jpn__get_tag_battery, mcp__zlp-prd-jpn__get_tag_config, Read, Write, Bash
+allowed-tools: mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__who_am_i, mcp__zlp-prd-jpn__list_assets, mcp__zlp-prd-jpn__get_tag_by_asset, mcp__zlp-prd-jpn__list_assets_with_tags, mcp__zlp-prd-jpn__list_offline_tags, mcp__zlp-prd-jpn__list_continuous_mode_tags, mcp__zlp-prd-jpn__get_asset_history, mcp__zlp-prd-jpn__get_tag_location_history, mcp__zlp-prd-jpn__get_tag_status, mcp__zlp-prd-jpn__get_tag_battery, mcp__zlp-prd-jpn__get_tag_config, Read, Write, Bash(date:*), Bash(TZ=*)
 ---
 
 # Koto Crane — tag usage — `$ARGUMENTS`
@@ -65,10 +65,25 @@ Check: claude mcp list  → confirm the server name matches the mcp__..__ prefix
 
 > **"Could not measure" and "was not used" are different findings.** Reporting the first as the second is how a tooling failure turns into a report that a crew did not work. Never collapse them.
 
+**Scope check, before anything else runs.** Call `who_am_i`. **If it returns write or admin scope, print this and STOP:**
+
+```
+⚫ KOTO — REFUSING TO RUN ON A WRITE-SCOPED KEY
+The key resolved to <scope>, not viewer / engineering:read.
+Condition is UNKNOWN — nothing was checked.
+Fix: issue a viewer-scoped key and set ZLP_PRD_JPN_API_KEY to it.
+```
+
+This halts rather than warning. The command can run shell commands (`date`, for the clocks), so a
+write+admin production credential means the key's scope — not the `allowed-tools` allowlist — is what
+stands between this monitor and live hardware. An unscoped key is a reason not to run.
+
 2. Print both clocks. JST = UTC+9. The site runs JST; most tooling around it reports PT.
 
 ```bash
-date -u '+UTC %Y-%m-%d %H:%M'; TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'; TZ=America/Los_Angeles date '+PT  %Y-%m-%d %H:%M'
+date -u '+UTC %Y-%m-%d %H:%M'
+TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'
+TZ=America/Los_Angeles date '+PT  %Y-%m-%d %H:%M'
 ```
 
 3. Parse `$ARGUMENTS`. Default `last_7d all`. Explicit ranges are `YYYY-MM-DD:YYYY-MM-DD`, interpreted in **JST**.

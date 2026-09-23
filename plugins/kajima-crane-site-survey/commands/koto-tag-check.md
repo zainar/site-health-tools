@@ -1,7 +1,7 @@
 ---
 description: Koto Crane tag health check (zlp-prd-jpn). Read-only. Grades device health and activity on two separate axes for the 12 monitored tags — Subcon C01–C10, Crane #1, Crane #5.
 argument-hint: "[check | triage | weekly] [all | subcon-c | cranes]  (default: check all)"
-allowed-tools: mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__list_assets, mcp__zlp-prd-jpn__get_tag_by_asset, mcp__zlp-prd-jpn__list_assets_with_tags, mcp__zlp-prd-jpn__list_trackers, mcp__zlp-prd-jpn__list_offline_tags, mcp__zlp-prd-jpn__list_continuous_mode_tags, mcp__zlp-prd-jpn__get_continuous_tag_health, mcp__zlp-prd-jpn__get_asset_history, mcp__zlp-prd-jpn__get_tag_location_history, mcp__zlp-prd-jpn__get_tag_status, mcp__zlp-prd-jpn__get_tag_battery, mcp__zlp-prd-jpn__get_tag_fuel_gauge, mcp__zlp-prd-jpn__get_tag_events, mcp__zlp-prd-jpn__get_tag_config, mcp__zlp-prd-jpn__check_tag_hub_connectivity, Read, Write, Bash
+allowed-tools: mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__who_am_i, mcp__zlp-prd-jpn__list_assets, mcp__zlp-prd-jpn__get_tag_by_asset, mcp__zlp-prd-jpn__list_assets_with_tags, mcp__zlp-prd-jpn__list_trackers, mcp__zlp-prd-jpn__list_offline_tags, mcp__zlp-prd-jpn__list_continuous_mode_tags, mcp__zlp-prd-jpn__get_continuous_tag_health, mcp__zlp-prd-jpn__get_asset_history, mcp__zlp-prd-jpn__get_tag_location_history, mcp__zlp-prd-jpn__get_tag_status, mcp__zlp-prd-jpn__get_tag_battery, mcp__zlp-prd-jpn__get_tag_fuel_gauge, mcp__zlp-prd-jpn__get_tag_events, mcp__zlp-prd-jpn__get_tag_config, mcp__zlp-prd-jpn__check_tag_hub_connectivity, Read, Write, Bash(date:*), Bash(TZ=*)
 ---
 
 # Koto Crane — tag health check — `$ARGUMENTS`
@@ -51,10 +51,25 @@ Cause: <the error>
 Check: claude mcp list  → confirm the server name matches the mcp__..__ prefix in this command.
 ```
 
+**Scope check, before anything else runs.** Call `who_am_i`. **If it returns write or admin scope, print this and STOP:**
+
+```
+⚫ KOTO — REFUSING TO RUN ON A WRITE-SCOPED KEY
+The key resolved to <scope>, not viewer / engineering:read.
+Condition is UNKNOWN — nothing was checked.
+Fix: issue a viewer-scoped key and set ZLP_PRD_JPN_API_KEY to it.
+```
+
+This halts rather than warning. The command can run shell commands (`date`, for the clocks), so a
+write+admin production credential means the key's scope — not the `allowed-tools` allowlist — is what
+stands between this monitor and live hardware. An unscoped key is a reason not to run.
+
 3. Get the current time in **both** zones and print them. JST = UTC+9; the site runs on JST and most tooling around it reports PT.
 
 ```bash
-date -u '+UTC %Y-%m-%d %H:%M'; TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'; TZ=America/Los_Angeles date '+PT  %Y-%m-%d %H:%M'
+date -u '+UTC %Y-%m-%d %H:%M'
+TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'
+TZ=America/Los_Angeles date '+PT  %Y-%m-%d %H:%M'
 ```
 
 4. Read `.koto-tag-state.json` from the working directory. If absent, seed it from **§Seed state** at the end of this file. Write it back at the end of the run, never before.

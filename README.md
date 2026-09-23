@@ -29,7 +29,7 @@ can't reach it, check `gh auth status` or that your SSH key is loaded, then retr
 
 ## Available plugins
 
-### `kajima-crane-site-survey` — v0.4.1
+### `kajima-crane-site-survey` — v0.5.0
 
 Five read-only checks for the Koto Pumping Station crane site
 (`875ca2f3-64bf-4931-8d6a-fe0ea2b6c784`, account `Kajima-Koto`, env `zlp-prd-jpn`):
@@ -57,11 +57,13 @@ export ZLP_PRD_JPN_API_KEY="zainar-..."
 ```
 
 The plugin ships no credential and registers the engineering API as `zlp-prd-jpn`, reading the key
-from that variable. **Scope matters more than it looks**: the credential this MCP normally carries has
-**write + admin on production**, and the commands' read-only design is enforced by their
-`allowed-tools` whitelists — which stop Claude calling a write tool, but do nothing about a
-wrongly-scoped key being used elsewhere. The reader and hub checks warn in preflight if the key
-resolves to write or admin.
+from that variable. **This is not optional — every command halts on a write or admin key.**
+
+The credential this MCP normally carries has **write + admin on production**. The commands'
+`allowed-tools` whitelists stop Claude calling a write *MCP tool*, but an allowlist does not
+constrain a shell, and these commands need one for the clocks. So `Bash` is scoped to
+`Bash(date:*)` / `Bash(TZ=*)` rather than left open, and the key's scope carries the rest: every
+command calls `who_am_i` in preflight and **refuses to run** if it resolves to write or admin.
 
 **2. Mixpanel, if you want `/koto-crane-usage`.** It is the one command spanning two servers, and a
 plugin cannot register an OAuth connector — add Mixpanel yourself, registered as `Mixpanel` (capital

@@ -53,7 +53,13 @@ It also means **heartbeat can never satisfy criterion 2.** A reader can heartbea
 
 A reader is **healthy** when all five hold over the evaluation window.
 
-Evaluation window: **rolling 24 h, weighted to JST working hours (08:00–18:00 Mon–Sat).** Overnight quiet is not evidence of anything at this site — the documented failure mode is daytime-only, peaking ~16:00 JST.
+Evaluation window: **rolling 24 h, weighted to JST working hours (08:00–18:00 Mon–Fri).**
+
+> **Window corrected 2026-09-16: 08:00–18:00 JST, Mon–Fri.** This document was written against
+> Mon–Sat. The commands in this plugin grade Mon–Fri, so where the text below says Mon–Sat, read
+> Mon–Fri — weekends are reported as an out-of-hours line rather than graded. See the plugin README
+> for why Saturday is deferred and what closes it.
+ Overnight quiet is not evidence of anything at this site — the documented failure mode is daytime-only, peaking ~16:00 JST.
 
 ---
 

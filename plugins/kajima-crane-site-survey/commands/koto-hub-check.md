@@ -1,7 +1,7 @@
 ---
 description: Koto Crane hub health check (zlp-prd-jpn). Read-only. Grades the site's hubs against the five-criterion definition — heartbeat, NTP, battery relay, RSSI relay, and tags reporting hub_not_found.
 argument-hint: "[check | triage | weekly]  (default: check)"
-allowed-tools: mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__who_am_i, mcp__zlp-prd-jpn__list_hubs, mcp__zlp-prd-jpn__get_hub_status, mcp__zlp-prd-jpn__list_hub_tags, mcp__zlp-prd-jpn__get_hub_tag_health, mcp__zlp-prd-jpn__get_hub_logs, mcp__zlp-prd-jpn__check_tag_hub_connectivity, mcp__zlp-prd-jpn__get_node_config, mcp__zlp-prd-jpn__list_site_wifi_nodes, mcp__zlp-prd-jpn__get_site_firmware_inventory, mcp__zlp-prd-jpn__get_site_last_locate, mcp__zlp-prd-jpn__run_site_coherency_audit, Read, Write, Bash
+allowed-tools: mcp__zlp-prd-jpn__resolver_status, mcp__zlp-prd-jpn__who_am_i, mcp__zlp-prd-jpn__list_hubs, mcp__zlp-prd-jpn__get_hub_status, mcp__zlp-prd-jpn__list_hub_tags, mcp__zlp-prd-jpn__get_hub_tag_health, mcp__zlp-prd-jpn__get_hub_logs, mcp__zlp-prd-jpn__check_tag_hub_connectivity, mcp__zlp-prd-jpn__get_node_config, mcp__zlp-prd-jpn__list_site_wifi_nodes, mcp__zlp-prd-jpn__get_site_firmware_inventory, mcp__zlp-prd-jpn__get_site_last_locate, mcp__zlp-prd-jpn__run_site_coherency_audit, Read, Write, Bash(date:*), Bash(TZ=*)
 ---
 
 # Koto Crane — hub health check — `$ARGUMENTS`
@@ -55,12 +55,27 @@ Check: claude mcp list  → confirm the server name matches the mcp__..__ prefix
 
 Increment `unknown_runs` in state before stopping. **If `unknown_runs` was already ≥ 1, say prominently that monitoring has failed on two consecutive runs.**
 
-3. Call `who_am_i`. **If it returns write or admin scope, warn at the top of the report and continue read-only.**
+3. **Call `who_am_i`. If it returns write or admin scope, print this and STOP:**
+
+```
+⚫ KOTO — REFUSING TO RUN ON A WRITE-SCOPED KEY
+The key resolved to <scope>, not viewer / engineering:read.
+Site condition is UNKNOWN — nothing was checked.
+Fix: issue a viewer-scoped key and set ZLP_PRD_JPN_API_KEY to it.
+```
+
+**This halts rather than warning, and the reason is worth knowing.** These commands can run shell
+commands (`date`, for the clocks). A shell plus a write+admin production credential means the
+`allowed-tools` allowlist is no longer the thing standing between this monitor and a reboot of live
+hardware — the key's scope is. An unscoped key is therefore not a governance note to carry in the
+report; it is a reason not to run at all on a site where crews work under crane loads.
 
 4. Get the current time in **both** zones and print them. JST = UTC+9.
 
 ```bash
-date -u '+UTC %Y-%m-%d %H:%M'; TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'; TZ=America/Los_Angeles date '+PT  %Y-%m-%d %H:%M'
+date -u '+UTC %Y-%m-%d %H:%M'
+TZ=Asia/Tokyo date '+JST %Y-%m-%d %H:%M (%a)'
+TZ=America/Los_Angeles date '+PT  %Y-%m-%d %H:%M'
 ```
 
 5. Read `.koto-hub-state.json`. If absent, seed it from **§Seed state**. Write it back at the end, **never before**.
@@ -104,7 +119,7 @@ Exactly one of these is true and nobody knows which:
 
 | Grade | Meaning |
 |---|---|
-| 🟢 **HEALTHY** | All five criteria met over the evaluation window |
+| 🟢 **HEALTHY** | Criteria 0–4 met over the evaluation window. **Never means all five** — criterion 5 has no tool (§7.5), so it is `not measured` on every run |
 | 🟡 **WATCH** / 🟠 **AMBER** / 🔴 **RED** | Fails one or more — per-criterion thresholds below |
 | ⚫ **UNKNOWN** | Could not observe it. Monitoring path down, hub roster unresolved, site uplink down. **Condition not established.** |
 
@@ -245,7 +260,7 @@ On `weekly`:
 | 🔴 **P2 / RED** | Hub silent during working hours **with location output degraded** † |
 | 🟠 **P3 / AMBER** | Relay volume < 20 % of baseline with live tags present · multiple distinct tags raising `0x0400` · correlated instability across hubs |
 | 🟡 **WATCH** | Heartbeat > 10 min · NTP unsynced · new crash report · `connected`/heartbeat contradiction · memory or disk trending down · any single `0x0400` tag |
-| 🟢 **GREEN** | Roster resolved, all five criteria met, nothing outstanding |
+| 🟢 **GREEN** | Roster resolved, criteria 0–4 met, nothing outstanding. **Criterion 5 is unmeasured, not met** — say so in the same line that reports GREEN |
 
 † **The hub-silent P2 is conditional on §2 resolving to "the hub is in the data path."** If Crane demonstrably works with its only named hub dark, hub-silent is not a P2 here and the incident register needs amending. **Say which reading you are applying.**
 
