@@ -1,4 +1,4 @@
-# ZaiNar Claude Code plugins
+# ZaiNar site health tools
 
 A plugin marketplace for internal Claude Code tooling. Add it once; install what you need.
 
@@ -6,13 +6,15 @@ A plugin marketplace for internal Claude Code tooling. Add it once; install what
 
 ```bash
 # in Claude Code — add the marketplace (once)
-/plugin marketplace add zainar/zainar-claude-plugins
+/plugin marketplace add zainar/site-health-tools
 
 # then install
-/plugin install kajima-crane-site-survey@zainar-tools
+/plugin install kajima-crane-site-survey@site-health-tools
 ```
 
-Replace `zainar/zainar-claude-plugins` with the real `owner/repo` if it differs.
+The marketplace name matches the repo (`site-health-tools`), so the two commands line up. Changing
+that name later breaks every existing install — the identifier is `plugin@marketplace` — so if it
+should be something else, change it before anyone installs.
 
 **Private repo?** That works — it uses your existing git credentials. If `/plugin marketplace add`
 can't reach it, check `gh auth status` or that your SSH key is loaded, then retry.
@@ -20,7 +22,7 @@ can't reach it, check `gh auth status` or that your SSH key is loaded, then retr
 **Updating.** There is no auto-update. When a new version lands:
 
 ```bash
-/plugin marketplace update zainar-tools
+/plugin marketplace update site-health-tools
 ```
 
 ---
@@ -110,7 +112,7 @@ Saturday question.
 1. Drop the plugin directory under `plugins/`.
 2. Add an entry to `.claude-plugin/marketplace.json` with `name`, `source` (the relative path),
    `description` and `version`.
-3. Commit and push. Users pick it up with `/plugin marketplace update zainar-tools`.
+3. Commit and push. Users pick it up with `/plugin marketplace update site-health-tools`.
 
 **Bump `version` on every change.** Omit it and installs pin to the commit SHA, which makes "are we
 on the same version?" unanswerable.
