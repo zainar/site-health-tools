@@ -7,10 +7,11 @@ definitions behind every grade they produce.
 > **This is a safety system.** Red-zone and proximity alerts warn workers standing under crane loads.
 > A silent site is urgent, not a data-quality issue.
 
-## The five checks
+## The six checks
 
 | Command | Answers | Arguments |
 |---|---|---|
+| `/koto-site-check` | **All three health checks in order, cross-checked into one site grade.** Start here. | `check` · `deep` · `weekly` |
 | `/koto-reader-check` | Are the 29 commissioned readers healthy? **Runs the site sweep.** | `check` · `deep` · `weekly` · `triage` |
 | `/koto-hub-check` | Are the site's hubs healthy — heartbeat, NTP, battery and RSSI relay, `hub_not_found`? | `check` · `triage` · `weekly` |
 | `/koto-tag-check` | Are the 12 monitored tags working right now — battery, flags, coverage? | `check` · `triage` · `weekly` |
@@ -20,9 +21,13 @@ definitions behind every grade they produce.
 Plus a `koto-site-reference` skill Claude loads on demand: the three health definitions, the platform
 roll-up spec, and the crane-event payload review.
 
-**Run `/koto-reader-check` first when anything looks wrong.** It is the only check that runs the site
-sweep, and a dark site presents as a dead hub, twelve dead tags, or an idle crane — none of which is
-the real finding.
+**Use `/koto-site-check` for a whole-site picture.** It runs the three health checks in the order
+their dependencies require — reader, then tag, then hub — and applies the five cross-gates none of
+them can apply alone, because none can see another's data. It defines no thresholds of its own.
+
+**Running one on its own is still fine**, but mind the order: `/koto-reader-check` is the only check
+that runs the site sweep, and a dark site presents as a dead hub, twelve dead tags, or an idle crane —
+none of which is the real finding.
 
 ## Nothing here is scheduled
 
@@ -193,4 +198,4 @@ the event now behaves differently than proposed).
 
 ---
 
-Source: the *Kajima site survey* project. Site facts current to 2026-09-16. Version 0.5.0.
+Source: the *Kajima site survey* project. Site facts current to 2026-09-16. Version 0.6.0.
