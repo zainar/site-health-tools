@@ -29,13 +29,14 @@ can't reach it, check `gh auth status` or that your SSH key is loaded, then retr
 
 ## Available plugins
 
-### `kajima-crane-site-survey` — v0.5.0
+### `kajima-crane-site-survey` — v0.6.0
 
 Five read-only checks for the Koto Pumping Station crane site
 (`875ca2f3-64bf-4931-8d6a-fe0ea2b6c784`, account `Kajima-Koto`, env `zlp-prd-jpn`):
 
 | Command | Answers |
 |---|---|
+| `/koto-site-check` | **All three health checks in order, cross-checked into one site grade.** Start here. |
 | `/koto-reader-check` | Are the 29 commissioned readers healthy? **Runs the site sweep.** |
 | `/koto-hub-check` | Are the hubs healthy — heartbeat, NTP, battery/RSSI relay, `hub_not_found`? |
 | `/koto-tag-check` | Are the 12 monitored tags working now — battery, flags, coverage? |
@@ -88,9 +89,10 @@ separate history and the `Change` lines are not comparable between you. **Agree 
 on a shared working directory, before you start.** They are gitignored here deliberately — do not
 commit them.
 
-**Run `/koto-reader-check` first when anything looks wrong.** It is the only check that runs the site
-sweep. A dark site presents as a dead hub, twelve dead tags, or an idle crane — and none of those is
-the real finding.
+**Start with `/koto-site-check`** — it runs the three health checks in dependency order and
+cross-checks them into one grade. Running them individually is fine, but `/koto-reader-check` goes
+first: it is the only one that runs the site sweep, and a dark site presents as a dead hub, twelve
+dead tags, or an idle crane.
 
 #### Known limits, stated up front
 

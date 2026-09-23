@@ -1,6 +1,6 @@
 ---
 name: koto-site-reference
-description: Ground truth for the Kajima Koto Pumping Station crane site (zlp-prd-jpn) — the reader, hub and tag health definitions, the site roster and its ghost records, the monitored tag set, and the known payload defects. Use when interpreting output from /koto-reader-check, /koto-hub-check, /koto-tag-check, /koto-tag-usage or /koto-crane-usage, when asked what counts as a healthy reader, hub or tag at Koto, when a Koto grade or threshold needs justifying or changing, when reconciling reader or tracker counts at that site, when working on crane load/usage instrumentation, or when adding an alert threshold or run frequency to any Koto monitor.
+description: Ground truth for the Kajima Koto Pumping Station crane site (zlp-prd-jpn) — the reader, hub and tag health definitions, the site roster and its ghost records, the monitored tag set, and the known payload defects. Use when interpreting output from /koto-site-check, /koto-reader-check, /koto-hub-check, /koto-tag-check, /koto-tag-usage or /koto-crane-usage, when asked what counts as a healthy reader, hub or tag at Koto, when a Koto grade or threshold needs justifying or changing, when reconciling reader or tracker counts at that site, when working on crane load/usage instrumentation, or when adding an alert threshold or run frequency to any Koto monitor.
 ---
 
 # Koto crane site — reference
@@ -96,6 +96,10 @@ Thirty findings is how the one that matters gets buried.
 presents as a dead hub; a hub fault presents as N silent readers.** Neither command can see the
 other's data, so each names the other when a finding points across the boundary and says plainly that
 it did not check it.
+
+**`/koto-site-check` runs all three in dependency order and applies the cross-gates**, which is the
+right entry point when the question is "how is the site". The individual checks remain for when the
+question is about one layer.
 
 **`/koto-reader-check` is the one that runs the site sweep** (`get_site_last_locate`,
 `get_site_health`, `list_stale_anchors`, the coherency audit) and writes `live_readers_reporting` and
