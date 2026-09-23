@@ -175,7 +175,7 @@ Run in this order. Stop where told.
 
 **Expect `inventory_mismatch` every run** from the 19 ghost records. Compare against `coherency_code` and `coherency_is_baseline_only` in state. A mismatch that is only the known 19 is **not a finding** — set `coherency_is_baseline_only: true` and write "standing baseline, unchanged". A mismatch that is *more* than the 19 **is** a finding.
 
-**If the stale set is empty and the roster count matches 29**, the site is provisionally green: on `check` mode you may skip §6 per-reader entirely and say so in `Not checked`.
+**If the stale set is empty and the roster count matches 29**, the site is provisionally reporting; on `check` mode you may skip §6 per-reader, but must not mark the site GREEN because the remaining criteria were not evaluated.
 
 > **Worth ten minutes once, then never again:** `generate_anchor_list_csv` is documented as "CSV of all anchors at a site **with config and status**." If that CSV carries surveyed position and heartbeat age, it replaces steps 3 and 5 *and* supplies the ghost filter in a single call. **Check the actual columns on your first run** and record the answer in `csv_columns_checked` in state.
 
